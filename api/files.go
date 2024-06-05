@@ -66,7 +66,7 @@ func GetFiles(ctx context.Context, fileId string, driverType string) ([]File, er
 			marker = ""
 		}
 		data := Json{
-			"drive_id":        getDriveID(driverType),
+			"drive_id":        GetDriveID(driverType),
 			"limit":           200,
 			"marker":          marker,
 			"order_by":        "created_at",
@@ -104,7 +104,7 @@ func Rename(name string, f File) error {
 	return err
 }
 
-func getDriveID(driveType string) string {
+func GetDriveID(driveType string) string {
 	if config.C().DriveType == driveType && config.C().DriveID != "" {
 		return config.C().DriveID
 	}
@@ -116,7 +116,7 @@ func getDriveID(driveType string) string {
 	if err != nil {
 		panic(err)
 	}
-	config.C().DriveID = utils.Json.Get(res, config.C().DriveType+"_drive_id").ToString()
+	config.C().DriveID = utils.Json.Get(res, driveType+"_drive_id").ToString()
 	config.C().DriveType = driveType
 	config.SaveYaml()
 	return config.C().DriveID

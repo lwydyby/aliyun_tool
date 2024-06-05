@@ -39,6 +39,7 @@ func (s *SimpleServer) buildHTTPHandler() http.Handler {
 	r.Path("/v1/token").Methods(http.MethodPost).Handler(CorsMiddleware(transHandler(SubmitTokenHandler)))
 	r.Path("/v1/name").Methods(http.MethodPost).Handler(CorsMiddleware(transHandler(GetFileHandler)))
 	r.Path("/v1/batch").Methods(http.MethodPost).Handler(CorsMiddleware(transHandler(BatchRenameHandler)))
+	r.Path("/v1/dir").Methods(http.MethodPost).Handler(CorsMiddleware(transHandler(GetDirHandler)))
 	r.PathPrefix("/").Handler(CorsMiddleware(http.StripPrefix("/", staticHandler)))
 	return r
 }

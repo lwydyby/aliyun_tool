@@ -8,7 +8,7 @@ RUN cd front && yarn install && yarn build
 FROM golang:1.22 AS go_builder
 WORKDIR /app
 COPY . .
-COPY --from=node_builder /app/front/dist ./front/
+COPY --from=node_builder /app/front/dist ./front/dist
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o aliyun .
 
 # 第三阶段：设置最终的运行环境

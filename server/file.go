@@ -160,6 +160,74 @@ func BatchRenameHandler(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+type GetDirRequest struct {
+	Dir        string `json:"dir,omitempty"`
+	DeviceType string `json:"device_type,omitempty"`
+}
+
+type GetDirResponse struct {
+	Url string `json:"url"`
+}
+
+func GetDirHandler(w http.ResponseWriter, req *http.Request) {
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		return
+	}
+	var request GetDirRequest
+	err = json.Unmarshal(body, &request)
+	if err != nil {
+		http.Error(w, "Error parsing JSON request body", http.StatusBadRequest)
+		return
+	}
+	if request.Dir == "" || request.DeviceType == "" {
+		http.Error(w, "dir is empty or device_type is empty", http.StatusBadRequest)
+		return
+	}
+	ctx := req.Context()
+	dirs := strings.Split(request.Dir, "/")
+	fileId := "root"
+	for i := range dirs {
+		files, err := api.GetFiles(ctx, fileId, request.DeviceType)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		hasFound := false
+		for j := range files {
+			if files[i].Type == "file" {
+				continue
+			}
+			if files[j].Name == dirs[i] {
+				fileId = files[j].FileId
+				hasFound = true
+				break
+			}
+		}
+		if !hasFound {
+			http.Error(w, "dir not found", http.StatusBadRequest)
+			return
+		}
+	}
+	resp := GetDirResponse{
+		Url: fmt.Sprintf("%s/%s", request.DeviceType, fileId),
+	}
+	responseData, err := json.Marshal(resp)
+	if err != nil {
+		http.Error(w, "Error generating JSON response", http.StatusInternalServerError)
+		return
+	}
+
+	// 设置响应头为JSON格式
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(responseData)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func getDeviceTypeAndFileID(path string) (string, string) {
 	filePaths := strings.Split(path, "/")
 	return filePaths[len(filePaths)-2], filePaths[len(filePaths)-1]
